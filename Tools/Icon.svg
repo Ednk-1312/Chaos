@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <radialGradient id="bg" cx="0.5" cy="0.42" r="0.75">
+      <stop offset="0" stop-color="#3B3F4A"/>
+      <stop offset="0.55" stop-color="#23262E"/>
+      <stop offset="1" stop-color="#101216"/>
+    </radialGradient>
+    <linearGradient id="face" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F2F5FB"/>
+      <stop offset="0.5" stop-color="#D9DFEC"/>
+      <stop offset="1" stop-color="#B7C0D4"/>
+    </linearGradient>
+    <linearGradient id="side" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#B7C1D6"/>
+      <stop offset="1" stop-color="#8E99B2"/>
+    </linearGradient>
+    <linearGradient id="inner" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FF6E5E"/>
+      <stop offset="1" stop-color="#C22F4B"/>
+    </linearGradient>
+    <radialGradient id="fault" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FF8A50" stop-opacity="0.95"/>
+      <stop offset="0.55" stop-color="#F5475F" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#7A0F2D" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFD9A0" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FF5C7A" stop-opacity="0.1"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="1024" height="1024" rx="232" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1024" height="1024" rx="232" fill="none" stroke="#FFFFFF" stroke-opacity="0.10" stroke-width="3"/>
+  <g>
+    <circle cx="512" cy="470" r="336" fill="#7A0F2D" opacity="0.35"/>
+    <circle cx="512" cy="470" r="300" fill="url(#fault)"/>
+    <g stroke="#FF6E5E" stroke-opacity="0.85" stroke-width="7" stroke-linecap="round" fill="none">
+      <path d="M 690 300 L 810 220"/>
+      <path d="M 722 462 L 862 462"/>
+      <path d="M 686 630 L 800 716"/>
+      <path d="M 470 792 L 470 908"/>
+      <path d="M 334 744 L 252 842"/>
+      <path d="M 300 470 L 168 470"/>
+      <path d="M 330 302 L 220 226"/>
+    </g>
+    <circle cx="512" cy="470" r="238" fill="url(#inner)"/>
+    <circle cx="512" cy="470" r="238" fill="none" stroke="#FFB4A8" stroke-opacity="0.5" stroke-width="3"/>
+  </g>
+  <g>
+    <path d="M 332 604 L 384 336 L 512 336 L 640 336 L 692 604 L 612 604 L 576 416 L 512 416 L 448 416 L 412 604 Z" fill="url(#side)" opacity="0.55"/>
+    <path d="M 324 592 L 376 324 L 504 324 L 632 324 L 684 592 L 604 592 L 568 404 L 504 404 L 440 404 L 404 592 Z" fill="url(#face)"/>
+    <path d="M 404 592 L 440 404 L 568 404 L 604 592 Z" fill="url(#side)" opacity="0.5"/>
+  </g>
+  <g fill="none" stroke-linecap="round">
+    <path d="M 352 668 L 424 668" stroke="url(#beam)" stroke-width="30"/>
+    <path d="M 600 668 L 672 668" stroke="url(#beam)" stroke-width="30"/>
+  </g>
+</svg>

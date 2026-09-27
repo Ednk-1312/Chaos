@@ -1,0 +1,28 @@
+.DS_Store
+.build/
+build/
+DerivedData/
+index.store
+*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+xcuserdata/
+*.ipa
+*.dSYM.zip
+*.o
+*.gcno
+*.gcda
+*.app
+*.dmg
+# Xcode Swift Build Tool (new build system) cache inside the project bundle
+Chaos.xcodeproj/-Xcc/
+# Generated app icon (built by Tools/make-icon.sh; source is Icon.svg)
+Tools/Chaos.icns
+Tools/icon_*.png
+# Local scratch/QA artifacts
+*.png.log
+qa_*.png
+/tmp/
+# Local tool metadata (Freebuff workspace id, SPM Xcode prefs)
+.freebuff/
+.swiftpm/
+
