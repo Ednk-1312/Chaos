@@ -33,6 +33,7 @@ jobs:
 
       - name: Build + package
         env:
+          RELEASE_TAG: ${{ github.ref_name }} # authoritative release identity
           SIGNING_MODE: adhoc # flip to developer-id once identities/secrets exist
           # SIGNING_IDENTITY:        ${{ secrets.DEVELOPER_ID_APPLICATION }}   # future
           # INSTALLER_SIGNING_IDENTITY: ${{ secrets.DEVELOPER_ID_INSTALLER }}  # future

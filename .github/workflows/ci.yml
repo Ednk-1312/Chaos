@@ -18,6 +18,8 @@ jobs:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # version-consistency tests read the release tags
       - name: Run ChaosKit test suite
         run: swift test
 

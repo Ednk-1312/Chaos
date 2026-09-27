@@ -28,7 +28,12 @@ final class ReleasePackagingTests: XCTestCase {
             guard FileManager.default.fileExists(atPath: script.path) else {
                 throw XCTSkip("version.sh not present (not a full checkout)")
             }
-            let out = try run(script.path, ["--shell"])
+            let out: String
+            do {
+                out = try run(script.path, ["--shell"])
+            } catch let err as NSError where err.code == 1 {
+                throw XCTSkip("version.sh unavailable here: \(err.localizedDescription)")
+            }
             var env: [String: String] = [:]
             for line in out.split(separator: "\n") {
                 let parts = line.split(separator: "=", maxSplits: 1)
@@ -239,9 +244,12 @@ final class ReleasePackagingTests: XCTestCase {
         try p.run()
         p.waitUntilExit()
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        let errData = (p.standardError as! Pipe).fileHandleForReading.readDataToEndOfFile()
         guard p.terminationStatus == 0 else {
+            let message = String(decoding: data as Data + errData, as: UTF8.self)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
             throw NSError(domain: "release", code: Int(p.terminationStatus),
-                          userInfo: [NSLocalizedDescriptionKey: String(decoding: data, as: UTF8.self)])
+                          userInfo: [NSLocalizedDescriptionKey: message])
         }
         return String(decoding: data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
     }
