@@ -386,7 +386,7 @@ public final class ExperimentEngine: @unchecked Sendable {
         rec.restorationStatus = ledger
         rec.evidenceByAssertion = ev
         rec.outcome = Self.outcomeFor(record: rec, reason: reason)
-        let restorationOK = ledger.values.allSatisfy(\.self) && !ledger.values.isEmpty
+        let restorationOK = !ledger.values.isEmpty && ledger.values.allSatisfy { $0 }
         rec.state = ExperimentState.derive(
             outcome: rec.outcome,
             restorationOK: restorationOK || ledger.isEmpty,

@@ -334,7 +334,7 @@ case "restore":
             print("\(k): \(ok ? "verified restored" : "UNABLE TO VERIFY — authorize via the Chaos app, then retry")")
         }
     }
-    exit(result.values.allSatisfy(\.self) ? 0 : 1)
+    exit(result.values.allSatisfy { $0 } ? 0 : 1)
 
 case "records":
     let records = PersistenceStore.shared.loadRecords()
