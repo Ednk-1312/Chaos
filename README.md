@@ -27,12 +27,37 @@ machine to a verified-clean state — with evidence, not assumptions.
 
 ## Requirements
 
-- macOS 14.0 or later (Apple Silicon or Intel)
+- macOS 14.0 or later (Apple Silicon or Intel for source builds; **release
+  artifacts are Apple Silicon (arm64) only**)
 - Xcode with the macOS 14+ SDK (built and tested with Xcode 27 / Swift 6.4; the
   project declares `SWIFT_VERSION = 6.0`, `MACOSX_DEPLOYMENT_TARGET = 14.0`)
 - No Apple Developer account required: the app is signed ad-hoc ("Signing: Automatic,
   Development Team: none") and all privileged operations use on-demand OS
   authorization rather than an embedded helper
+
+## Install a release (no Xcode needed)
+
+Grab `Chaos-v<version>.pkg` from [GitHub Releases](https://github.com/Ednk-1312/Chaos/releases) and run it.
+
+What it does:
+
+- installs **Chaos.app** into `/Applications` (standard Installer prompt;
+  upgrading over an existing install replaces the app and leaves your data in
+  `~/Library/Application Support/Chaos` untouched)
+- adds a symlink `/usr/local/bin/chaos` → the CLI inside the app bundle, so
+  `chaos` works from Terminal without the app running. The installer never
+  overwrites an existing file there that isn't a Chaos symlink.
+
+Signing status, honestly: preview packages and zips are **ad-hoc signed and not
+notarized**, so Gatekeeper will warn on first launch of a *downloaded* copy
+(right-click → Open, or remove the quarantine attribute). Building from source
+has no such prompt. Developer ID signing + notarization is wired in the release
+pipeline and activates automatically once signing credentials are configured
+(see `RELEASING.md`).
+
+To uninstall: drag `/Applications/Chaos.app` to the Trash and
+`rm /usr/local/bin/chaos` (only if it's the Chaos symlink). User data in
+`~/Library/Application Support/Chaos` is never removed by the installer.
 
 ## Open in Xcode
 
@@ -72,10 +97,17 @@ codesign --force --sign - build/Debug/Chaos.app
 cd ChaosKit && swift test
 ```
 
-All steps verified on a clean checkout. `Tools/install-cli.sh` alternatively
-builds the CLI in release mode and installs it into the app bundle
-(`sudo cp build/Debug/Chaos.app/Contents/Helpers/chaos /usr/local/bin/chaos`
-to put it on your PATH).
+All steps verified on a clean checkout.
+
+**Development vs release CLI installs, clearly separated:**
+
+- *Development*: `Tools/install-cli.sh` builds the CLI in release mode and
+  installs it into your locally built app bundle — no sudo, no system changes.
+- *Release*: the `.pkg` postinstall adds `/usr/local/bin/chaos` (see above).
+
+Maintainer release tooling (`.pkg` + `.zip` + checksums + manifest, optional
+Developer ID signing/notarization) lives in `Tools/Release/` — see
+[`RELEASING.md`](RELEASING.md).
 
 ## Platform workflow
 

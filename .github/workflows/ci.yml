@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test (SwiftPM)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run ChaosKit test suite
+        run: swift test
+
+  build-app:
+    name: Build app + verify bundle
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build (Release)
+        run: |
+          swift build -c release --product chaos
+          swift build -c release --product chaos-stress
+          xcodebuild -project Chaos.xcodeproj -target Chaos -configuration Release build \
+            ARCHS=arm64 ONLY_ACTIVE_ARCH=NO \
+            CONFIGURATION_BUILD_DIR="$PWD/build/ci" | tail -5
+      - name: Verify bundle contents
+        run: |
+          APP=build/ci/Chaos.app
+          test -x "$APP/Contents/MacOS/Chaos"
+          test -x "$APP/Contents/MacOS/chaos-stress"
+          test -x "$APP/Contents/Helpers/chaos"
+          plutil -lint "$APP/Contents/Info.plist"
+          lipo -info "$APP/Contents/MacOS/Chaos" | grep -q arm64
+      - name: CLI smoke
+        run: build/ci/Chaos.app/Contents/Helpers/chaos list faults --json | head -c 200
+
+  package:
+    name: Release pipeline (ad-hoc dry run)
+    runs-on: macos-14
+    needs: [test, build-app]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # version.sh reads the most recent v* tag
+      - name: Build + package (ad-hoc, no secrets)
+        env:
+          SIGNING_MODE: adhoc
+        run: Tools/Release/build-release.sh
+      - name: Verify artifacts
+        run: |
+          ls build/release
+          test -n "$(ls build/release/Chaos-v*.pkg)" 
+          test -n "$(ls build/release/Chaos-v*.zip)"
+          shasum -a 256 -c build/release/SHA256SUMS
+      - name: Upload packaging logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: packaging-logs
+          path: |
+            /tmp/chaos-release-build.log
+          if-no-files-found: ignore
+          retention-days: 7

@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+-preview.[0-9]+']
+
+permissions:
+  contents: write # create the Release and upload assets
+
+concurrency:
+  group: release-${{ github.ref }}
+
+jobs:
+  release:
+    name: Build, package, verify, publish
+    runs-on: macos-14
+    environment: release # signing/notarization secrets (if configured) live here, never in PR scope
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # version.sh reads tags
+
+      - name: Resolve + validate version
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          export RELEASE_TAG="$TAG"
+          Tools/Release/version.sh --check
+          Tools/Release/version.sh --shell > version.env
+          cat version.env
+
+      - name: Run test suite
+        run: swift test 2>&1 | tail -3
+
+      - name: Build + package
+        env:
+          SIGNING_MODE: adhoc # flip to developer-id once identities/secrets exist
+          # SIGNING_IDENTITY:        ${{ secrets.DEVELOPER_ID_APPLICATION }}   # future
+          # INSTALLER_SIGNING_IDENTITY: ${{ secrets.DEVELOPER_ID_INSTALLER }}  # future
+        run: Tools/Release/build-release.sh
+
+      - name: Verify artifacts + checksums
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          test -f "build/release/Chaos-v${TAG}.pkg"
+          test -f "build/release/Chaos-v${TAG}.zip"
+          test -f build/release/release-manifest.json
+          shasum -a 256 -c build/release/SHA256SUMS
+          cat build/release/release-manifest.json
+
+      - name: Notarize + staple (runs only when notary credentials are configured)
+        env:
+          # Configure via repo/environment secrets + `xcrun notarytool store-credentials`
+          # on the runner, or App Store Connect API key secrets:
+          #   NOTARY_PROFILE, NOTARY_KEY_ID, NOTARY_ISSUER_ID, NOTARY_KEY_PATH
+          NOTARY_PROFILE: ${{ secrets.NOTARY_PROFILE }}
+        if: env.NOTARY_PROFILE != ''
+        run: |
+          xcrun notarytool submit build/release/Chaos-v*.zip --keychain-profile "$NOTARY_PROFILE" --wait
+          xcrun notarytool submit build/release/Chaos-v*.pkg --keychain-profile "$NOTARY_PROFILE" --wait
+          xcrun stapler staple build/release/Chaos.app
+          ditto -c -k --keepParent build/release/Chaos.app build/release/Chaos-v${GITHUB_REF_NAME#v}.zip
+          shasum -a 256 build/release/Chaos-v*.pkg build/release/Chaos-v*.zip > build/release/SHA256SUMS
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-logs-${{ github.ref_name }}
+          path: |
+            /tmp/chaos-release-build.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          # Idempotent: create the Release with assets, or refresh assets if it exists.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" --clobber \
+              build/release/Chaos-v${TAG#v}.pkg \
+              build/release/Chaos-v${TAG#v}.zip \
+              build/release/SHA256SUMS \
+              build/release/release-manifest.json
+          else
+            gh release create "$TAG" \
+              --title "Chaos — v${TAG#v}" \
+              --notes "See RELEASE_NOTES.md in the repository for the full release notes, installation steps, and signing status." \
+              build/release/Chaos-v${TAG#v}.pkg \
+              build/release/Chaos-v${TAG#v}.zip \
+              build/release/SHA256SUMS \
+              build/release/release-manifest.json
+          fi

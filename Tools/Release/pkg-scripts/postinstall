@@ -1,0 +1,47 @@
+#!/bin/bash
+# postinstall — make the bundled CLI reachable from Terminal.
+#
+# Installs a symlink /usr/local/bin/chaos -> /Applications/Chaos.app/Contents/Helpers/chaos.
+# Conservative by design:
+#   - never overwrites a real file/binaries that already exist at the target
+#   - only replaces a symlink that points at Chaos (previous Chaos install)
+#   - never touches shell profiles, PATH config, or anything else
+# Always exits 0: a symlink hiccup must not fail the install of the app itself.
+
+set -u
+TARGET="/Applications/Chaos.app/Contents/Helpers/chaos"
+LINK="/usr/local/bin/chaos"
+LOG="/var/log/chaos-install.log"
+
+log() { echo "$(date '+%Y-%m-%d %H:%M:%S') $1" >> "$LOG" 2>/dev/null || true; }
+
+if [[ ! -x "$TARGET" ]]; then
+  log "CLI missing from app bundle; skipping symlink"
+  exit 0
+fi
+
+mkdir -p /usr/local/bin 2>/dev/null || true
+
+if [[ -e "$LINK" || -L "$LINK" ]]; then
+  if [[ -L "$LINK" && "$(readlink "$LINK")" == "$TARGET" ]]; then
+    log "symlink already current" ; exit 0
+  fi
+  if [[ -L "$LINK" ]]; then
+    # Only replace symlinks that point into a Chaos install (ours or old location).
+    if [[ "$(readlink "$LINK")" == *"/Applications/Chaos.app/"* ]]; then
+      rm -f "$LINK" || { log "could not replace stale Chaos symlink"; exit 0; }
+    else
+      log "refusing to replace unrelated symlink at $LINK"
+      echo "NOTICE: /usr/local/bin/chaos already exists (not managed by Chaos); left untouched." >&2
+      exit 0
+    fi
+  else
+    log "refusing to replace real file at $LINK"
+    echo "NOTICE: /usr/local/bin/chaos exists and is not a Chaos symlink; left untouched." >&2
+    exit 0
+  fi
+fi
+
+ln -s "$TARGET" "$LINK" 2>/dev/null || { log "symlink creation failed"; exit 0; }
+log "installed symlink $LINK -> $TARGET"
+exit 0

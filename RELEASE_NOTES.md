@@ -42,8 +42,30 @@ xcodebuild -project Chaos.xcodeproj -target Chaos -configuration Debug build
 cd ChaosKit && swift test
 ```
 
-Requires macOS 14+ and Xcode with the macOS 14 SDK. No Apple Developer account
-required. See the README for the full walkthrough and first experiment.
+Requires macOS 14+ and Xcode with the macOS 14 SDK. See the README for the full
+walkthrough and first experiment.
+
+## Downloads & installation
+
+Release artifacts (built by `Tools/Release/build-release.sh`, checksums in
+`SHA256SUMS`, machine-readable metadata in `release-manifest.json`):
+
+- **`Chaos-v0.1.0-preview.2.pkg`** — installer: puts Chaos.app in
+  `/Applications` and symlinks `/usr/local/bin/chaos` so the CLI works from
+  Terminal without the app running. Never overwrites unrelated files; user data
+  in `~/Library/Application Support/Chaos` is untouched by installs/upgrades.
+- **`Chaos-v0.1.0-preview.2.zip`** — standalone app for manual installs and
+  inspection.
+- **`SHA256SUMS`** — verify before running: `shasum -a 256 -c SHA256SUMS`
+- **`release-manifest.json`** — version, architecture, hashes, signing status.
+
+Artifacts are **Apple Silicon (arm64) only** and **ad-hoc signed**. They are
+**not notarized**: on first launch of a downloaded copy, Gatekeeper will ask
+you to confirm (right-click → Open), because Apple cannot yet verify the
+publisher. Building and running from source has no such prompt. Developer ID
+signing and notarization are implemented in the release pipeline and will
+activate once Apple Developer credentials are configured — until then,
+build-from-source is the zero-friction path.
 
 ## Known limitations
 
@@ -51,7 +73,7 @@ required. See the README for the full walkthrough and first experiment.
   drills (system clock, battery, privacy grants, device unplug) — always labeled
 - Network faults affect the whole machine; per-app network isolation isn't
   possible with documented APIs
-- Ad-hoc signed, build-from-source; no notarized download yet
+- Release artifacts are arm64-only and ad-hoc signed; not notarized yet
 - Verified on one machine configuration; expect rough edges
 
 ## Safety considerations
