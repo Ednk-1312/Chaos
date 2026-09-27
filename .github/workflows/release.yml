@@ -45,7 +45,7 @@ jobs:
           test -f "build/release/Chaos-v${TAG}.pkg"
           test -f "build/release/Chaos-v${TAG}.zip"
           test -f build/release/release-manifest.json
-          shasum -a 256 -c build/release/SHA256SUMS
+          ( cd build/release && shasum -a 256 -c SHA256SUMS )
           cat build/release/release-manifest.json
 
       - name: Notarize + staple (runs only when notary credentials are configured)

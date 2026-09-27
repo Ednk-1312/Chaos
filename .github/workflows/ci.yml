@@ -61,9 +61,9 @@ jobs:
       - name: Verify artifacts
         run: |
           ls build/release
-          test -n "$(ls build/release/Chaos-v*.pkg)" 
+          test -n "$(ls build/release/Chaos-v*.pkg)"
           test -n "$(ls build/release/Chaos-v*.zip)"
-          shasum -a 256 -c build/release/SHA256SUMS
+          ( cd build/release && shasum -a 256 -c SHA256SUMS )
       - name: Upload packaging logs on failure
         if: failure()
         uses: actions/upload-artifact@v4
